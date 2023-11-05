@@ -2449,6 +2449,7 @@
               "args": [
                     {"name": "indirect buffer", "type": "buffer"},
                     {"name": "indirect offset", "type": "uint64_t"},
+                    {"name": "max draw count", "type": "uint32_t"},
                     {"name": "draw count buffer", "type": "buffer"},
                     {"name": "draw count offset", "type": "uint64_t"}
                ]
@@ -2672,6 +2673,7 @@
               "args": [
                     {"name": "indirect buffer", "type": "buffer"},
                     {"name": "indirect offset", "type": "uint64_t"},
+                    {"name": "max draw count", "type": "uint32_t"},
                     {"name": "draw count buffer", "type": "buffer"},
                     {"name": "draw count offset", "type": "uint64_t"}
                ]
