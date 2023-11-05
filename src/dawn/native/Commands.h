@@ -68,6 +68,8 @@ enum class Command {
     EndRenderPass,
     ExecuteBundles,
     InsertDebugMarker,
+    MultiDrawIndirect,
+    MultiDrawIndexedIndirect,
     PixelLocalStorageBarrier,
     PopDebugGroup,
     PushDebugGroup,
@@ -291,6 +293,19 @@ struct ClearBufferCmd {
 struct InsertDebugMarkerCmd {
     uint32_t length;
 };
+
+struct MultiDrawIndirectCmd {
+    MultiDrawIndirectCmd();
+    ~MultiDrawIndirectCmd();
+
+    Ref<BufferBase> indirectBuffer;
+    uint64_t indirectOffset;
+    uint32_t maxDrawCount;
+    Ref<BufferBase> drawCountBuffer;
+    uint64_t drawCountOffset;
+};
+
+struct MultiDrawIndexedIndirectCmd : MultiDrawIndirectCmd {};
 
 struct PixelLocalStorageBarrierCmd {};
 

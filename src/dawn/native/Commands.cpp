@@ -150,6 +150,17 @@ void FreeCommands(CommandIterator* commands) {
                 cmd->~InsertDebugMarkerCmd();
                 break;
             }
+            case Command::MultiDrawIndirect: {
+                MultiDrawIndirectCmd* draw = commands->NextCommand<MultiDrawIndirectCmd>();
+                draw->~MultiDrawIndirectCmd();
+                break;
+            }
+            case Command::MultiDrawIndexedIndirect: {
+                MultiDrawIndexedIndirectCmd* draw =
+                    commands->NextCommand<MultiDrawIndexedIndirectCmd>();
+                draw->~MultiDrawIndexedIndirectCmd();
+                break;
+            }
             case Command::PopDebugGroup: {
                 PopDebugGroupCmd* cmd = commands->NextCommand<PopDebugGroupCmd>();
                 cmd->~PopDebugGroupCmd();
@@ -317,6 +328,14 @@ void SkipCommand(CommandIterator* commands, Command type) {
             break;
         }
 
+        case Command::MultiDrawIndirect:
+            commands->NextCommand<MultiDrawIndirectCmd>();
+            break;
+
+        case Command::MultiDrawIndexedIndirect:
+            commands->NextCommand<MultiDrawIndexedIndirectCmd>();
+            break;
+
         case Command::PopDebugGroup:
             commands->NextCommand<PopDebugGroupCmd>();
             break;
@@ -433,6 +452,9 @@ EndRenderPassCmd::~EndRenderPassCmd() = default;
 
 ClearBufferCmd::ClearBufferCmd() = default;
 ClearBufferCmd::~ClearBufferCmd() = default;
+
+MultiDrawIndirectCmd::MultiDrawIndirectCmd() = default;
+MultiDrawIndirectCmd::~MultiDrawIndirectCmd() = default;
 
 ResolveQuerySetCmd::ResolveQuerySetCmd() = default;
 ResolveQuerySetCmd::~ResolveQuerySetCmd() = default;
