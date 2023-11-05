@@ -59,6 +59,9 @@ class RenderEncoderBase : public ProgrammableEncoder {
     void APIDrawIndirect(BufferBase* indirectBuffer, uint64_t indirectOffset);
     void APIDrawIndexedIndirect(BufferBase* indirectBuffer, uint64_t indirectOffset);
 
+    void APIMultiDrawIndirect(BufferBase* indirectBuffer, uint64_t indirectOffset, uint32_t maxDrawCount, BufferBase * drawCountBuffer, uint64_t drawCountOffset);
+    void APIMultiDrawIndexedIndirect(BufferBase* indirectBuffer, uint64_t indirectOffset, uint32_t maxDrawCount, BufferBase * drawCountBuffer, uint64_t drawCountOffset);
+
     void APISetPipeline(RenderPipelineBase* pipeline);
 
     void APISetVertexBuffer(uint32_t slot, BufferBase* buffer, uint64_t offset, uint64_t size);

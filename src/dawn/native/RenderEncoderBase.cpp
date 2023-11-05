@@ -307,6 +307,17 @@ void RenderEncoderBase::APIDrawIndexedIndirect(BufferBase* indirectBuffer,
         "encoding %s.DrawIndexedIndirect(%s, %u).", this, indirectBuffer, indirectOffset);
 }
 
+void RenderEncoderBase::APIMultiDrawIndirect(BufferBase* indirectBuffer,
+                                             uint64_t indirectOffset,
+                                             uint32_t maxDrawCount,
+                                             BufferBase* drawCountBuffer,
+                                             uint64_t drawCountOffset) {}
+void RenderEncoderBase::APIMultiDrawIndexedIndirect(BufferBase* indirectBuffer,
+                                                    uint64_t indirectOffset,
+                                                    uint32_t maxDrawCount,
+                                                    BufferBase* drawCountBuffer,
+                                                    uint64_t drawCountOffset) {}
+
 void RenderEncoderBase::APISetPipeline(RenderPipelineBase* pipeline) {
     mEncodingContext->TryEncode(
         this,
