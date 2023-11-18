@@ -1572,6 +1572,29 @@ MaybeError CommandBuffer::RecordRenderPass(CommandRecordingContext* commandConte
                 break;
             }
 
+            case Command::MultiDrawIndirect: {
+                MultiDrawIndirectCmd* draw = iter->NextCommand<MultiDrawIndirectCmd>();
+
+                DAWN_TRY(bindingTracker->Apply(commandContext));
+                vertexBufferTracker.Apply(commandList, lastPipeline);
+
+                Buffer* buffer = ToBackend(draw->indirectBuffer.Get());
+                ComPtr<ID3D12CommandSignature> signature =
+                    lastPipeline->GetDrawIndirectCommandSignature();
+
+                Buffer* drawCountBuffer = nullptr;
+
+                if (auto bufPtr = draw->drawCountBuffer.Get()) {
+                    drawCountBuffer = ToBackend(bufPtr);
+                }
+
+                commandList->ExecuteIndirect(signature.Get(), draw->maxDrawCount,
+                                             buffer->GetD3D12Resource(), draw->indirectOffset,
+                                             drawCountBuffer->GetD3D12Resource(),
+                                             draw->drawCountOffset);
+                break;
+            }
+
             case Command::DrawIndexedIndirect: {
                 DrawIndexedIndirectCmd* draw = iter->NextCommand<DrawIndexedIndirectCmd>();
 
