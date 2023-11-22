@@ -315,64 +315,64 @@ void RenderEncoderBase::APIMultiDrawIndirect(BufferBase* indirectBuffer,
     mEncodingContext->TryEncode(
         this,
         [&](CommandAllocator* allocator) -> MaybeError {
-        if (IsValidationEnabled()) {
-            DAWN_TRY(GetDevice()->ValidateObject(indirectBuffer));
-            DAWN_TRY(ValidateCanUseAs(indirectBuffer, wgpu::BufferUsage::Indirect));
-            DAWN_TRY(mCommandBufferState.ValidateCanDraw());
-            if (GetDevice()->IsCompatibilityMode()) {
-                DAWN_TRY(mCommandBufferState.ValidateNoDifferentTextureViewsOnSameTexture());
-            }
-
-            DAWN_INVALID_IF(indirectOffset % 4 != 0, "Indirect offset (%u) is not a multiple of 4.",
-                            indirectOffset);
-
-            DAWN_INVALID_IF(
-                indirectOffset >= indirectBuffer->GetSize() ||
-                    maxDrawCount * kDrawIndirectSize > indirectBuffer->GetSize() - indirectOffset,
-                "The combined Indirect offset (%u) and Max Draw Count (%u) is out of bounds of "
-                "the indirect buffer %s size (%u).",
-                indirectOffset, maxDrawCount, indirectBuffer, indirectBuffer->GetSize());
-
-            if (drawCountBuffer) {
-                DAWN_INVALID_IF(drawCountOffset % 4 != 0,
-                                "Draw count offset (%u) is not a multiple of 4.", drawCountOffset);
-                DAWN_TRY(ValidateCanUseAs(drawCountBuffer, wgpu::BufferUsage::Indirect));
+            if (IsValidationEnabled()) {
+                DAWN_TRY(GetDevice()->ValidateObject(indirectBuffer));
+                DAWN_TRY(ValidateCanUseAs(indirectBuffer, wgpu::BufferUsage::Indirect));
+                DAWN_TRY(mCommandBufferState.ValidateCanDraw());
+                if (GetDevice()->IsCompatibilityMode()) {
+                    DAWN_TRY(mCommandBufferState.ValidateNoDifferentTextureViewsOnSameTexture());
+                }
+            
+                DAWN_INVALID_IF(indirectOffset % 4 != 0, "Indirect offset (%u) is not a multiple of 4.",
+                                indirectOffset);
+            
                 DAWN_INVALID_IF(
-                    drawCountOffset >= drawCountBuffer->GetSize() ||
-                        sizeof(uint64_t) > drawCountBuffer->GetSize() - drawCountOffset,
-                    "Draw count offset (%u) is out of bounds of draw count buffer %s size "
-                    "(%u).",
-                    drawCountOffset, drawCountBuffer, drawCountBuffer->GetSize());
+                    indirectOffset >= indirectBuffer->GetSize() ||
+                        maxDrawCount * kDrawIndirectSize > indirectBuffer->GetSize() - indirectOffset,
+                    "The combined Indirect offset (%u) and Max Draw Count (%u) is out of bounds of "
+                    "the indirect buffer %s size (%u).",
+                    indirectOffset, maxDrawCount, indirectBuffer, indirectBuffer->GetSize());
+            
+                if (drawCountBuffer) {
+                    DAWN_INVALID_IF(drawCountOffset % 4 != 0,
+                                    "Draw count offset (%u) is not a multiple of 4.", drawCountOffset);
+                    DAWN_TRY(ValidateCanUseAs(drawCountBuffer, wgpu::BufferUsage::Indirect));
+                    DAWN_INVALID_IF(
+                        drawCountOffset >= drawCountBuffer->GetSize() ||
+                            sizeof(uint64_t) > drawCountBuffer->GetSize() - drawCountOffset,
+                        "Draw count offset (%u) is out of bounds of draw count buffer %s size "
+                        "(%u).",
+                        drawCountOffset, drawCountBuffer, drawCountBuffer->GetSize());
+                }
             }
-        }
-
-        MultiDrawIndirectCmd* cmd =
-            allocator->Allocate<MultiDrawIndirectCmd>(Command::MultiDrawIndirect);
-
-        bool duplicateBaseVertexInstance = GetDevice()->ShouldDuplicateParametersForDrawIndirect(
-            mCommandBufferState.GetRenderPipeline());
-        if (IsValidationEnabled() || duplicateBaseVertexInstance) {
-            // Later, EncodeIndirectDrawValidationCommands will allocate a scratch storage
-            // buffer which will store the validated or duplicated indirect data. The buffer
-            // and offset will be updated to point to it.
-            // |EncodeIndirectDrawValidationCommands| is called at the end of encoding the
-            // render pass, while the |cmd| pointer is still valid.
-            cmd->indirectBuffer = nullptr;
-
-            mIndirectDrawMetadata.AddIndirectMultiDraw(indirectBuffer, indirectOffset,
-                                                       duplicateBaseVertexInstance, cmd);
-        } else {
-            cmd->indirectBuffer = indirectBuffer;
-            cmd->indirectOffset = indirectOffset;
-        }
-
-        // TODO(crbug.com/dawn/1166): Adding the indirectBuffer is needed for correct usage
-        // validation, but it will unnecessarily transition to indirectBuffer usage in the
-        // backend.
-        mUsageTracker.BufferUsedAs(indirectBuffer, wgpu::BufferUsage::Indirect);
-
-        if (drawCountBuffer) {
-            mUsageTracker.BufferUsedAs(drawCountBuffer, wgpu::BufferUsage::Indirect);
+            
+            MultiDrawIndirectCmd* cmd =
+                allocator->Allocate<MultiDrawIndirectCmd>(Command::MultiDrawIndirect);
+            
+            bool duplicateBaseVertexInstance = GetDevice()->ShouldDuplicateParametersForDrawIndirect(
+                mCommandBufferState.GetRenderPipeline());
+            if (IsValidationEnabled() || duplicateBaseVertexInstance) {
+                // Later, EncodeIndirectDrawValidationCommands will allocate a scratch storage
+                // buffer which will store the validated or duplicated indirect data. The buffer
+                // and offset will be updated to point to it.
+                // |EncodeIndirectDrawValidationCommands| is called at the end of encoding the
+                // render pass, while the |cmd| pointer is still valid.
+                cmd->indirectBuffer = nullptr;
+            
+                mIndirectDrawMetadata.AddIndirectMultiDraw(indirectBuffer, indirectOffset,
+                                                           duplicateBaseVertexInstance, cmd);
+            } else {
+                cmd->indirectBuffer = indirectBuffer;
+                cmd->indirectOffset = indirectOffset;
+            }
+            
+            // TODO(crbug.com/dawn/1166): Adding the indirectBuffer is needed for correct usage
+            // validation, but it will unnecessarily transition to indirectBuffer usage in the
+            // backend.
+            mUsageTracker.BufferUsedAs(indirectBuffer, wgpu::BufferUsage::Indirect);
+            
+            if (drawCountBuffer)
+                mUsageTracker.BufferUsedAs(drawCountBuffer, wgpu::BufferUsage::Indirect);
 
             mDrawCount++;
 
