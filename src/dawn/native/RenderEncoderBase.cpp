@@ -359,8 +359,8 @@ void RenderEncoderBase::APIMultiDrawIndirect(BufferBase* indirectBuffer,
             // render pass, while the |cmd| pointer is still valid.
             cmd->indirectBuffer = nullptr;
 
-            mIndirectDrawMetadata.AddIndirectDraw(indirectBuffer, indirectOffset,
-                                                  duplicateBaseVertexInstance, cmd);
+            mIndirectDrawMetadata.AddIndirectMultiDraw(indirectBuffer, indirectOffset,
+                                                       duplicateBaseVertexInstance, cmd);
         } else {
             cmd->indirectBuffer = indirectBuffer;
             cmd->indirectOffset = indirectOffset;

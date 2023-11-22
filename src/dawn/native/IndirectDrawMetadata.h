@@ -143,6 +143,11 @@ class IndirectDrawMetadata : public NonCopyable {
                          bool duplicateBaseVertexInstance,
                          DrawIndirectCmd* cmd);
 
+    void AddIndirectMultiDraw(BufferBase* indirectBuffer,
+                              uint64_t indirectOffset,
+                              bool duplicateBaseVertexInstance,
+                              MultiDrawIndirectCmd* cmd);
+
   private:
     IndexedIndirectBufferValidationInfoMap mIndexedIndirectBufferValidationInfo;
     std::set<RenderBundleBase*> mAddedBundles;

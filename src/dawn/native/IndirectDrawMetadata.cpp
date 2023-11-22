@@ -220,6 +220,28 @@ void IndirectDrawMetadata::AddIndirectDraw(BufferBase* indirectBuffer,
     it->second.AddIndirectDraw(mMaxDrawCallsPerBatch, mMaxBatchOffsetRange, draw);
 }
 
+void IndirectDrawMetadata::AddIndirectMultiDraw(BufferBase* indirectBuffer,
+                                                uint64_t indirectOffset,
+                                                bool duplicateBaseVertexInstance,
+                                                MultiDrawIndirectCmd* cmd) {
+    // RWC - I think this config determines the validation which can be batched together
+    // ...it might make more sense to just batch an entire MDI call by itself though - not
+    // sure
+    const IndexedIndirectConfig config = {indirectBuffer, 0, duplicateBaseVertexInstance,
+                                          DrawType::NonIndexed};
+    auto it = mIndexedIndirectBufferValidationInfo.find(config);
+    if (it == mIndexedIndirectBufferValidationInfo.end()) {
+        auto result = mIndexedIndirectBufferValidationInfo.emplace(
+            config, IndexedIndirectBufferValidationInfo(indirectBuffer));
+        it = result.first;
+    }
+
+    IndirectDraw draw{};
+    draw.inputBufferOffset = indirectOffset;
+    draw.cmd = cmd;
+    it->second.AddIndirectDraw(mMaxDrawCallsPerBatch, mMaxBatchOffsetRange, draw);
+}
+
 bool IndirectDrawMetadata::IndexedIndirectConfig::operator<(
     const IndexedIndirectConfig& other) const {
     return std::tie(inputIndirectBuffer, numIndexBufferElements, duplicateBaseVertexInstance,

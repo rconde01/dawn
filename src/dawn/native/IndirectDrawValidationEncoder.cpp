@@ -241,6 +241,9 @@ size_t GetBatchDataSize(uint32_t numDraws) {
 uint32_t ComputeMaxDrawCallsPerIndirectValidationBatch(const CombinedLimits& limits) {
     const uint64_t batchDrawCallLimitByDispatchSize =
         static_cast<uint64_t>(limits.v1.maxComputeWorkgroupsPerDimension) * kWorkgroupSize;
+
+    // RWC - I don't understand how this limit is formed. I would have thought it would be 
+    // maxStorageBufferBindingSize/indirectParamsSize or something like that.
     const uint64_t batchDrawCallLimitByStorageBindingSize =
         (limits.v1.maxStorageBufferBindingSize - sizeof(BatchInfo)) / sizeof(uint32_t);
     return static_cast<uint32_t>(
