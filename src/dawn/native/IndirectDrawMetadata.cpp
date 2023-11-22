@@ -238,7 +238,7 @@ void IndirectDrawMetadata::AddIndirectMultiDraw(BufferBase* indirectBuffer,
 
     IndirectDraw draw{};
     draw.inputBufferOffset = indirectOffset;
-    draw.cmd = cmd;
+    //draw.cmd = cmd;
     it->second.AddIndirectDraw(mMaxDrawCallsPerBatch, mMaxBatchOffsetRange, draw);
 }
 
