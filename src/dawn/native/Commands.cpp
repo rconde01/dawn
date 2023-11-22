@@ -155,12 +155,12 @@ void FreeCommands(CommandIterator* commands) {
                 draw->~MultiDrawIndirectCmd();
                 break;
             }
-            case Command::MultiDrawIndexedIndirect: {
-                MultiDrawIndexedIndirectCmd* draw =
-                    commands->NextCommand<MultiDrawIndexedIndirectCmd>();
-                draw->~MultiDrawIndexedIndirectCmd();
-                break;
-            }
+            //case Command::MultiDrawIndexedIndirect: {
+            //    MultiDrawIndexedIndirectCmd* draw =
+            //        commands->NextCommand<MultiDrawIndexedIndirectCmd>();
+            //    draw->~MultiDrawIndexedIndirectCmd();
+            //    break;
+            //}
             case Command::PopDebugGroup: {
                 PopDebugGroupCmd* cmd = commands->NextCommand<PopDebugGroupCmd>();
                 cmd->~PopDebugGroupCmd();
@@ -332,9 +332,9 @@ void SkipCommand(CommandIterator* commands, Command type) {
             commands->NextCommand<MultiDrawIndirectCmd>();
             break;
 
-        case Command::MultiDrawIndexedIndirect:
-            commands->NextCommand<MultiDrawIndexedIndirectCmd>();
-            break;
+        //case Command::MultiDrawIndexedIndirect:
+        //    commands->NextCommand<MultiDrawIndexedIndirectCmd>();
+        //    break;
 
         case Command::PopDebugGroup:
             commands->NextCommand<PopDebugGroupCmd>();

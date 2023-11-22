@@ -2445,16 +2445,6 @@
                ]
             },
             {
-              "name": "multi draw indexed indirect",
-              "args": [
-                    {"name": "indirect buffer", "type": "buffer"},
-                    {"name": "indirect offset", "type": "uint64_t"},
-                    {"name": "max draw count", "type": "uint32_t"},
-                    {"name": "draw count buffer", "type": "buffer"},
-                    {"name": "draw count offset", "type": "uint64_t"}
-               ]
-            },
-            {
                 "name": "insert debug marker",
                 "args": [
                     {"name": "marker label", "type": "char", "annotation": "const*", "length": "strlen"}
@@ -2660,16 +2650,6 @@
             },
             {
               "name": "multi draw indirect",
-              "args": [
-                    {"name": "indirect buffer", "type": "buffer"},
-                    {"name": "indirect offset", "type": "uint64_t"},
-                    {"name": "max draw count", "type": "uint32_t"},
-                    {"name": "draw count buffer", "type": "buffer"},
-                    {"name": "draw count offset", "type": "uint64_t"}
-               ]
-            },
-            {
-              "name": "multi draw indexed indirect",
               "args": [
                     {"name": "indirect buffer", "type": "buffer"},
                     {"name": "indirect offset", "type": "uint64_t"},

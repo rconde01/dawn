@@ -69,7 +69,7 @@ enum class Command {
     ExecuteBundles,
     InsertDebugMarker,
     MultiDrawIndirect,
-    MultiDrawIndexedIndirect,
+    //MultiDrawIndexedIndirect,
     PixelLocalStorageBarrier,
     PopDebugGroup,
     PushDebugGroup,
@@ -305,7 +305,7 @@ struct MultiDrawIndirectCmd {
     uint64_t drawCountOffset;
 };
 
-struct MultiDrawIndexedIndirectCmd : MultiDrawIndirectCmd {};
+//struct MultiDrawIndexedIndirectCmd : MultiDrawIndirectCmd {};
 
 struct PixelLocalStorageBarrierCmd {};
 
