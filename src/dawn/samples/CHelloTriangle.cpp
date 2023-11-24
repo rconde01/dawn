@@ -34,6 +34,7 @@ WGPUDevice device;
 WGPUQueue queue;
 WGPUSwapChain swapchain;
 WGPURenderPipeline pipeline;
+WGPUBuffer indirectBuffer;
 
 WGPUTextureFormat swapChainFormat;
 
@@ -45,12 +46,15 @@ void init() {
 
     const char* vs = R"(
         @vertex fn main(
-            @builtin(vertex_index) VertexIndex : u32
+            @builtin(vertex_index) VertexIndex : u32,
+            @builtin(instance_index) InstanceIndex: u32
         ) -> @builtin(position) vec4f {
+            let offset = f32(InstanceIndex)*0.2;
+
             var pos = array(
-                vec2f( 0.0,  0.5),
-                vec2f(-0.5, -0.5),
-                vec2f( 0.5, -0.5)
+                vec2f( 0.0 + offset,  0.5),
+                vec2f(-0.5 + offset, -0.5),
+                vec2f( 0.5 + offset, -0.5)
             );
             return vec4f(pos[VertexIndex], 0.0, 1.0);
         })";
@@ -109,6 +113,32 @@ void init() {
 
     wgpuShaderModuleRelease(vsModule);
     wgpuShaderModuleRelease(fsModule);
+
+    {
+        auto const indirectParamsSize = 4 * sizeof(uint32_t);
+
+        WGPUBufferDescriptor bufferDescriptor = {};
+        bufferDescriptor.mappedAtCreation = true;
+        bufferDescriptor.size = 2 * indirectParamsSize;
+        bufferDescriptor.usage = WGPUBufferUsage::WGPUBufferUsage_Indirect;
+
+        indirectBuffer = wgpuDeviceCreateBuffer(device, &bufferDescriptor);
+
+        auto indirectParams = static_cast<uint32_t*>(
+            wgpuBufferGetMappedRange(indirectBuffer, 0, bufferDescriptor.size));
+
+        indirectParams[0 * 4 + 0] = 3;
+        indirectParams[0 * 4 + 1] = 1;
+        indirectParams[0 * 4 + 2] = 0;
+        indirectParams[0 * 4 + 3] = 0;
+
+        indirectParams[1 * 4 + 0] = 3;
+        indirectParams[1 * 4 + 1] = 1;
+        indirectParams[1 * 4 + 2] = 0;
+        indirectParams[1 * 4 + 3] = 1;
+
+        wgpuBufferUnmap(indirectBuffer);
+    }
 }
 
 void frame() {
@@ -131,7 +161,8 @@ void frame() {
 
         WGPURenderPassEncoder pass = wgpuCommandEncoderBeginRenderPass(encoder, &renderpassInfo);
         wgpuRenderPassEncoderSetPipeline(pass, pipeline);
-        wgpuRenderPassEncoderDraw(pass, 3, 1, 0, 0);
+        wgpuRenderPassEncoderDrawIndirect(pass, indirectBuffer, 0);
+        wgpuRenderPassEncoderDrawIndirect(pass, indirectBuffer, 4 * sizeof(uint32_t));
         wgpuRenderPassEncoderEnd(pass);
         wgpuRenderPassEncoderRelease(pass);
 
