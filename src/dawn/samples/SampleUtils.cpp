@@ -188,6 +188,9 @@ wgpu::Device CreateCppDawnDevice() {
 
     WGPUDeviceDescriptor deviceDesc = {};
     deviceDesc.nextInChain = reinterpret_cast<WGPUChainedStruct*>(&toggles);
+    WGPUFeatureName requiredFeatures[1] = {WGPUFeatureName::WGPUFeatureName_IndirectFirstInstance};
+    deviceDesc.requiredFeatures = requiredFeatures;
+    deviceDesc.requiredFeatureCount = 1;
 
     WGPUDevice backendDevice = preferredAdapter->CreateDevice(&deviceDesc);
     DawnProcTable backendProcs = dawn::native::GetProcs();
