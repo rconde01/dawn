@@ -25,8 +25,8 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef SRC_DAWN_NATIVE_INDIRECTDRAWMETADATA_H_
-#define SRC_DAWN_NATIVE_INDIRECTDRAWMETADATA_H_
+#ifndef SRC_DAWN_NATIVE_IndirectMultiDrawMetadata_H_
+#define SRC_DAWN_NATIVE_IndirectMultiDrawMetadata_H_
 
 #include <cstdint>
 #include <map>
@@ -53,20 +53,20 @@ uint64_t ComputeMaxIndirectValidationBatchOffsetRange(const CombinedLimits& limi
 // is accumulated while its corresponding render pass is encoded, and is later used to encode
 // validation commands to be inserted into the command buffer just before the render pass's own
 // commands.
-class IndirectDrawMetadata : public NonCopyable {
+class IndirectMultiDrawMetadata : public NonCopyable {
   public:
-    struct IndirectDraw {
+    struct IndirectMultiDraw {
         uint64_t inputBufferOffset;
         // This is a pointer to the command that should be populated with the validated
         // indirect scratch buffer. It is only valid up until the encoded command buffer
         // is submitted.
-        DrawIndirectCmd* cmd;
+        MultiDrawIndirectCmd* cmd;
     };
 
     struct IndirectValidationBatch {
         uint64_t minOffset;
         uint64_t maxOffset;
-        std::vector<IndirectDraw> draws;
+        std::vector<IndirectMultiDraw> draws;
     };
 
     // Tracks information about every draw call in this render pass which uses the same indirect
@@ -78,9 +78,9 @@ class IndirectDrawMetadata : public NonCopyable {
 
         // Logs a new drawIndexedIndirect call for the render pass. `cmd` is updated with an
         // assigned (and deferred) buffer ref and relative offset before returning.
-        void AddIndirectDraw(uint32_t maxDrawCallsPerIndirectValidationBatch,
-                             uint64_t maxBatchOffsetRange,
-                             IndirectDraw draw);
+        void AddIndirectMultiDraw(uint32_t maxDrawCallsPerIndirectValidationBatch,
+                                  uint64_t maxBatchOffsetRange,
+                                  IndirectMultiDraw draw);
 
         // Adds draw calls from an already-computed batch, e.g. from a previously encoded
         // RenderBundle. The added batch is merged into an existing batch if possible, otherwise
@@ -122,26 +122,26 @@ class IndirectDrawMetadata : public NonCopyable {
     using IndexedIndirectBufferValidationInfoMap =
         std::map<IndexedIndirectConfig, IndexedIndirectBufferValidationInfo>;
 
-    explicit IndirectDrawMetadata(const CombinedLimits& limits);
-    ~IndirectDrawMetadata();
+    explicit IndirectMultiDrawMetadata(const CombinedLimits& limits);
+    ~IndirectMultiDrawMetadata();
 
-    IndirectDrawMetadata(IndirectDrawMetadata&&);
-    IndirectDrawMetadata& operator=(IndirectDrawMetadata&&);
+    IndirectMultiDrawMetadata(IndirectMultiDrawMetadata&&);
+    IndirectMultiDrawMetadata& operator=(IndirectMultiDrawMetadata&&);
 
     IndexedIndirectBufferValidationInfoMap* GetIndexedIndirectBufferValidationInfo();
 
     void AddBundle(RenderBundleBase* bundle);
-    void AddIndexedIndirectDraw(wgpu::IndexFormat indexFormat,
-                                uint64_t indexBufferSize,
-                                BufferBase* indirectBuffer,
-                                uint64_t indirectOffset,
-                                bool duplicateBaseVertexInstance,
-                                DrawIndexedIndirectCmd* cmd);
+    // void AddIndexedIndirectMultiDraw(wgpu::IndexFormat indexFormat,
+    //                             uint64_t indexBufferSize,
+    //                             BufferBase* indirectBuffer,
+    //                             uint64_t indirectOffset,
+    //                             bool duplicateBaseVertexInstance,
+    //                             MultiDrawIndexedIndirectCmd* cmd);
 
-    void AddIndirectDraw(BufferBase* indirectBuffer,
-                         uint64_t indirectOffset,
-                         bool duplicateBaseVertexInstance,
-                         DrawIndirectCmd* cmd);
+    void AddIndirectMultiDraw(BufferBase* indirectBuffer,
+                              uint64_t indirectOffset,
+                              bool duplicateBaseVertexInstance,
+                              MultiDrawIndirectCmd* cmd);
 
   private:
     IndexedIndirectBufferValidationInfoMap mIndexedIndirectBufferValidationInfo;
@@ -153,4 +153,4 @@ class IndirectDrawMetadata : public NonCopyable {
 
 }  // namespace dawn::native
 
-#endif  // SRC_DAWN_NATIVE_INDIRECTDRAWMETADATA_H_
+#endif  // SRC_DAWN_NATIVE_IndirectMultiDrawMetadata_H_

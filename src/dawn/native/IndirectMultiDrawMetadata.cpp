@@ -25,7 +25,7 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "dawn/native/IndirectDrawMetadata.h"
+#include "dawn/native/IndirectMultiDrawMetadata.h"
 
 #include <algorithm>
 #include <utility>
@@ -42,14 +42,14 @@ uint64_t ComputeMaxIndirectValidationBatchOffsetRange(const CombinedLimits& limi
            kDrawIndexedIndirectSize;
 }
 
-IndirectDrawMetadata::IndexedIndirectBufferValidationInfo::IndexedIndirectBufferValidationInfo(
+IndirectMultiDrawMetadata::IndexedIndirectBufferValidationInfo::IndexedIndirectBufferValidationInfo(
     BufferBase* indirectBuffer)
     : mIndirectBuffer(indirectBuffer) {}
 
-void IndirectDrawMetadata::IndexedIndirectBufferValidationInfo::AddIndirectDraw(
+void IndirectMultiDrawMetadata::IndexedIndirectBufferValidationInfo::AddIndirectMultiDraw(
     uint32_t maxDrawCallsPerIndirectValidationBatch,
     uint64_t maxBatchOffsetRange,
-    IndirectDraw draw) {
+    IndirectMultiDraw draw) {
     const uint64_t newOffset = draw.inputBufferOffset;
     auto it = mBatches.begin();
     while (it != mBatches.end()) {
@@ -101,7 +101,7 @@ void IndirectDrawMetadata::IndexedIndirectBufferValidationInfo::AddIndirectDraw(
     mBatches.insert(it, std::move(newBatch));
 }
 
-void IndirectDrawMetadata::IndexedIndirectBufferValidationInfo::AddBatch(
+void IndirectMultiDrawMetadata::IndexedIndirectBufferValidationInfo::AddBatch(
     uint32_t maxDrawCallsPerIndirectValidationBatch,
     uint64_t maxBatchOffsetRange,
     const IndirectValidationBatch& newBatch) {
@@ -128,34 +128,35 @@ void IndirectDrawMetadata::IndexedIndirectBufferValidationInfo::AddBatch(
     mBatches.push_back(newBatch);
 }
 
-const std::vector<IndirectDrawMetadata::IndirectValidationBatch>&
-IndirectDrawMetadata::IndexedIndirectBufferValidationInfo::GetBatches() const {
+const std::vector<IndirectMultiDrawMetadata::IndirectValidationBatch>&
+IndirectMultiDrawMetadata::IndexedIndirectBufferValidationInfo::GetBatches() const {
     return mBatches;
 }
 
-IndirectDrawMetadata::IndirectDrawMetadata(const CombinedLimits& limits)
+IndirectMultiDrawMetadata::IndirectMultiDrawMetadata(const CombinedLimits& limits)
     : mMaxBatchOffsetRange(ComputeMaxIndirectValidationBatchOffsetRange(limits)),
       mMaxDrawCallsPerBatch(ComputeMaxDrawCallsPerIndirectValidationBatch(limits)) {}
 
-IndirectDrawMetadata::~IndirectDrawMetadata() = default;
+IndirectMultiDrawMetadata::~IndirectMultiDrawMetadata() = default;
 
-IndirectDrawMetadata::IndirectDrawMetadata(IndirectDrawMetadata&&) = default;
+IndirectMultiDrawMetadata::IndirectMultiDrawMetadata(IndirectMultiDrawMetadata&&) = default;
 
-IndirectDrawMetadata& IndirectDrawMetadata::operator=(IndirectDrawMetadata&&) = default;
+IndirectMultiDrawMetadata& IndirectMultiDrawMetadata::operator=(IndirectMultiDrawMetadata&&) =
+    default;
 
-IndirectDrawMetadata::IndexedIndirectBufferValidationInfoMap*
-IndirectDrawMetadata::GetIndexedIndirectBufferValidationInfo() {
+IndirectMultiDrawMetadata::IndexedIndirectBufferValidationInfoMap*
+IndirectMultiDrawMetadata::GetIndexedIndirectBufferValidationInfo() {
     return &mIndexedIndirectBufferValidationInfo;
 }
 
-void IndirectDrawMetadata::AddBundle(RenderBundleBase* bundle) {
+void IndirectMultiDrawMetadata::AddBundle(RenderBundleBase* bundle) {
     auto [_, inserted] = mAddedBundles.insert(bundle);
     if (!inserted) {
         return;
     }
 
     for (const auto& [config, validationInfo] :
-         bundle->GetIndirectDrawMetadata().mIndexedIndirectBufferValidationInfo) {
+         bundle->GetIndirectMultiDrawMetadata().mIndexedIndirectBufferValidationInfo) {
         auto it = mIndexedIndirectBufferValidationInfo.lower_bound(config);
         if (it != mIndexedIndirectBufferValidationInfo.end() && it->first == config) {
             // We already have batches for the same config. Merge the new ones in.
@@ -168,43 +169,10 @@ void IndirectDrawMetadata::AddBundle(RenderBundleBase* bundle) {
     }
 }
 
-void IndirectDrawMetadata::AddIndexedIndirectDraw(wgpu::IndexFormat indexFormat,
-                                                  uint64_t indexBufferSize,
-                                                  BufferBase* indirectBuffer,
-                                                  uint64_t indirectOffset,
-                                                  bool duplicateBaseVertexInstance,
-                                                  DrawIndexedIndirectCmd* cmd) {
-    uint64_t numIndexBufferElements;
-    switch (indexFormat) {
-        case wgpu::IndexFormat::Uint16:
-            numIndexBufferElements = indexBufferSize / 2;
-            break;
-        case wgpu::IndexFormat::Uint32:
-            numIndexBufferElements = indexBufferSize / 4;
-            break;
-        case wgpu::IndexFormat::Undefined:
-            DAWN_UNREACHABLE();
-    }
-
-    const IndexedIndirectConfig config = {indirectBuffer, numIndexBufferElements,
-                                          duplicateBaseVertexInstance, DrawType::Indexed};
-    auto it = mIndexedIndirectBufferValidationInfo.find(config);
-    if (it == mIndexedIndirectBufferValidationInfo.end()) {
-        auto result = mIndexedIndirectBufferValidationInfo.emplace(
-            config, IndexedIndirectBufferValidationInfo(indirectBuffer));
-        it = result.first;
-    }
-
-    IndirectDraw draw{};
-    draw.inputBufferOffset = indirectOffset;
-    draw.cmd = cmd;
-    it->second.AddIndirectDraw(mMaxDrawCallsPerBatch, mMaxBatchOffsetRange, draw);
-}
-
-void IndirectDrawMetadata::AddIndirectDraw(BufferBase* indirectBuffer,
-                                           uint64_t indirectOffset,
-                                           bool duplicateBaseVertexInstance,
-                                           DrawIndirectCmd* cmd) {
+void IndirectMultiDrawMetadata::AddIndirectMultiDraw(BufferBase* indirectBuffer,
+                                                     uint64_t indirectOffset,
+                                                     bool duplicateBaseVertexInstance,
+                                                     MultiDrawIndirectCmd* cmd) {
     const IndexedIndirectConfig config = {indirectBuffer, 0, duplicateBaseVertexInstance,
                                           DrawType::NonIndexed};
     auto it = mIndexedIndirectBufferValidationInfo.find(config);
@@ -214,20 +182,20 @@ void IndirectDrawMetadata::AddIndirectDraw(BufferBase* indirectBuffer,
         it = result.first;
     }
 
-    IndirectDraw draw{};
+    IndirectMultiDraw draw{};
     draw.inputBufferOffset = indirectOffset;
     draw.cmd = cmd;
-    it->second.AddIndirectDraw(mMaxDrawCallsPerBatch, mMaxBatchOffsetRange, draw);
+    it->second.AddIndirectMultiDraw(mMaxDrawCallsPerBatch, mMaxBatchOffsetRange, draw);
 }
 
-bool IndirectDrawMetadata::IndexedIndirectConfig::operator<(
+bool IndirectMultiDrawMetadata::IndexedIndirectConfig::operator<(
     const IndexedIndirectConfig& other) const {
     return std::tie(inputIndirectBuffer, numIndexBufferElements, duplicateBaseVertexInstance,
                     drawType) < std::tie(other.inputIndirectBuffer, other.numIndexBufferElements,
                                          other.duplicateBaseVertexInstance, other.drawType);
 }
 
-bool IndirectDrawMetadata::IndexedIndirectConfig::operator==(
+bool IndirectMultiDrawMetadata::IndexedIndirectConfig::operator==(
     const IndexedIndirectConfig& other) const {
     return std::tie(inputIndirectBuffer, numIndexBufferElements, duplicateBaseVertexInstance,
                     drawType) == std::tie(other.inputIndirectBuffer, other.numIndexBufferElements,

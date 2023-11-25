@@ -37,6 +37,7 @@
 #include "dawn/native/Error.h"
 #include "dawn/native/Forward.h"
 #include "dawn/native/IndirectDrawMetadata.h"
+#include "dawn/native/IndirectMultiDrawMetadata.h"
 #include "dawn/native/ObjectBase.h"
 #include "dawn/native/PassResourceUsage.h"
 
@@ -73,6 +74,7 @@ class RenderBundleBase final : public ApiObjectBase {
     uint64_t GetDrawCount() const;
     const RenderPassResourceUsage& GetResourceUsage() const;
     const IndirectDrawMetadata& GetIndirectDrawMetadata();
+    const IndirectMultiDrawMetadata& GetIndirectMultiDrawMetadata();
 
   private:
     RenderBundleBase(DeviceBase* device, ErrorTag errorTag, const char* label);
@@ -81,6 +83,7 @@ class RenderBundleBase final : public ApiObjectBase {
 
     CommandIterator mCommands;
     IndirectDrawMetadata mIndirectDrawMetadata;
+    IndirectMultiDrawMetadata mIndirectMultiDrawMetadata;
     Ref<AttachmentState> mAttachmentState;
     bool mDepthReadOnly;
     bool mStencilReadOnly;

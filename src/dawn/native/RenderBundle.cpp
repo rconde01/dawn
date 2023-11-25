@@ -132,4 +132,8 @@ const IndirectDrawMetadata& RenderBundleBase::GetIndirectDrawMetadata() {
     return mIndirectDrawMetadata;
 }
 
+const IndirectMultiDrawMetadata& RenderBundleBase::GetIndirectMultiDrawMetadata() {
+    return mIndirectMultiDrawMetadata;
+}
+
 }  // namespace dawn::native
