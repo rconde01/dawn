@@ -56,7 +56,8 @@ class RenderBundleBase final : public ApiObjectBase {
                      bool depthReadOnly,
                      bool stencilReadOnly,
                      RenderPassResourceUsage resourceUsage,
-                     IndirectDrawMetadata indirectDrawMetadata);
+                     IndirectDrawMetadata indirectDrawMetadata,
+                     IndirectMultiDrawMetadata indirectMultiDrawMetadata);
 
     static RenderBundleBase* MakeError(DeviceBase* device, const char* label);
 

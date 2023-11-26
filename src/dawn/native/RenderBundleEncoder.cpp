@@ -182,7 +182,8 @@ ResultOrError<RenderBundleBase*> RenderBundleEncoder::FinishImpl(
 
     return new RenderBundleBase(this, descriptor, AcquireAttachmentState(), IsDepthReadOnly(),
                                 IsStencilReadOnly(), std::move(usages),
-                                std::move(mIndirectDrawMetadata));
+                                std::move(mIndirectDrawMetadata),
+                                std::move(mIndirectMultiDrawMetadata));
 }
 
 MaybeError RenderBundleEncoder::ValidateFinish(const RenderPassResourceUsage& usages) const {

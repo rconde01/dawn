@@ -44,10 +44,12 @@ RenderBundleBase::RenderBundleBase(RenderBundleEncoder* encoder,
                                    bool depthReadOnly,
                                    bool stencilReadOnly,
                                    RenderPassResourceUsage resourceUsage,
-                                   IndirectDrawMetadata indirectDrawMetadata)
+                                   IndirectDrawMetadata indirectDrawMetadata,
+                                   IndirectMultiDrawMetadata indirectMultiDrawMetadata)
     : ApiObjectBase(encoder->GetDevice(), kLabelNotImplemented),
       mCommands(encoder->AcquireCommands()),
       mIndirectDrawMetadata(std::move(indirectDrawMetadata)),
+      mIndirectMultiDrawMetadata(std::move(indirectMultiDrawMetadata)),
       mAttachmentState(std::move(attachmentState)),
       mDepthReadOnly(depthReadOnly),
       mStencilReadOnly(stencilReadOnly),
@@ -71,7 +73,9 @@ RenderBundleBase* RenderBundleBase::MakeError(DeviceBase* device, const char* la
 }
 
 RenderBundleBase::RenderBundleBase(DeviceBase* device, ErrorTag errorTag, const char* label)
-    : ApiObjectBase(device, errorTag, label), mIndirectDrawMetadata(device->GetLimits()) {}
+    : ApiObjectBase(device, errorTag, label),
+      mIndirectDrawMetadata(device->GetLimits()),
+      mIndirectMultiDrawMetadata(device->GetLimits()) {}
 
 ObjectType RenderBundleBase::GetType() const {
     return ObjectType::RenderBundle;
