@@ -45,10 +45,6 @@ namespace dawn::native {
 class RenderBundleBase;
 struct CombinedLimits;
 
-// In the unlikely scenario that indirect offsets used over a single buffer span more than
-// this length of the buffer, we split the validation work into multiple batches.
-uint64_t ComputeMaxIndirectValidationBatchOffsetRange(const CombinedLimits& limits);
-
 // Metadata corresponding to the validation requirements of a single render pass. This metadata
 // is accumulated while its corresponding render pass is encoded, and is later used to encode
 // validation commands to be inserted into the command buffer just before the render pass's own
@@ -64,8 +60,9 @@ class IndirectMultiDrawMetadata : public NonCopyable {
     };
 
     struct IndirectValidationBatch {
-        uint64_t minOffset;
-        uint64_t maxOffset;
+        // The minimum and maximum bytes used within the indirect buffer
+        uint64_t minByte;
+        uint64_t maxByte;
         std::vector<IndirectMultiDraw> draws;
     };
 

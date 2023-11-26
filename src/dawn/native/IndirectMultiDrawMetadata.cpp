@@ -37,9 +37,12 @@
 
 namespace dawn::native {
 
-uint64_t ComputeMaxIndirectValidationBatchOffsetRange(const CombinedLimits& limits) {
-    return limits.v1.maxStorageBufferBindingSize - limits.v1.minStorageBufferOffsetAlignment -
-           kDrawIndexedIndirectSize;
+uint64_t ComputeMaxIndirectValidationBatchOffsetRangeSize(const CombinedLimits& limits) {
+    // TODO(RWC) - Should this account for duplicating base/instance
+    return limits.v1.maxStorageBufferBindingSize - limits.v1.minStorageBufferOffsetAlignment;
+
+    // We subtract kDrawIndexedIndirectSize because the maxOffset is the start offset...so we
+    // need room for the actual draw
 }
 
 IndirectMultiDrawMetadata::IndexedIndirectBufferValidationInfo::IndexedIndirectBufferValidationInfo(
@@ -50,14 +53,18 @@ void IndirectMultiDrawMetadata::IndexedIndirectBufferValidationInfo::AddIndirect
     uint32_t maxDrawCallsPerIndirectValidationBatch,
     uint64_t maxBatchOffsetRange,
     IndirectMultiDraw draw) {
-    const uint64_t newOffset = draw.inputBufferOffset;
+    const uint64_t newMinByte = draw.inputBufferOffset;
+    const uint64_t newMaxByte =
+        draw.inputBufferOffset + draw.cmd->maxDrawCount * kDrawIndirectSize - 1;
     auto it = mBatches.begin();
     while (it != mBatches.end()) {
         IndirectValidationBatch& batch = *it;
         if (batch.draws.size() >= maxDrawCallsPerIndirectValidationBatch) {
+            // TODO(RWC) Batches might overlap - but i think it's ok? The minByte of each batch will
+            // be ordered, but the max of a batch might be beyond the min of the next.
             // This batch is full. If its minOffset is to the right of the new offset, we can
             // just insert a new batch here.
-            if (newOffset < batch.minOffset) {
+            if (newMinByte < batch.minByte) {
                 break;
             }
 
@@ -66,26 +73,23 @@ void IndirectMultiDrawMetadata::IndexedIndirectBufferValidationInfo::AddIndirect
             continue;
         }
 
-        if (newOffset >= batch.minOffset && newOffset <= batch.maxOffset) {
+        if (newMinByte >= batch.minByte && newMaxByte <= batch.maxByte) {
             batch.draws.push_back(std::move(draw));
             return;
         }
 
-        if (newOffset < batch.minOffset && batch.maxOffset - newOffset <= maxBatchOffsetRange) {
-            // We can extend this batch to the left in order to fit the new offset.
-            batch.minOffset = newOffset;
+        // TODO(RWC) what if a single call is bigger than maxBatchOffsetRange
+        const uint64_t extended_min = std::min(batch.minByte, newMinByte);
+        const uint64_t extended_max = std::max(batch.maxByte, newMaxByte);
+
+        if (extended_max - extended_min + 1 <= maxBatchOffsetRange) {
+            batch.minByte = extended_min;
+            batch.maxByte = extended_max;
             batch.draws.push_back(std::move(draw));
             return;
         }
 
-        if (newOffset > batch.maxOffset && newOffset - batch.minOffset <= maxBatchOffsetRange) {
-            // We can extend this batch to the right in order to fit the new offset.
-            batch.maxOffset = newOffset;
-            batch.draws.push_back(std::move(draw));
-            return;
-        }
-
-        if (newOffset < batch.minOffset) {
+        if (newMinByte < batch.minByte) {
             // We want to insert a new batch just before this one.
             break;
         }
@@ -94,8 +98,8 @@ void IndirectMultiDrawMetadata::IndexedIndirectBufferValidationInfo::AddIndirect
     }
 
     IndirectValidationBatch newBatch;
-    newBatch.minOffset = newOffset;
-    newBatch.maxOffset = newOffset;
+    newBatch.minByte = newMinByte;
+    newBatch.maxByte = newMaxByte;
     newBatch.draws.push_back(std::move(draw));
 
     mBatches.insert(it, std::move(newBatch));
@@ -108,18 +112,18 @@ void IndirectMultiDrawMetadata::IndexedIndirectBufferValidationInfo::AddBatch(
     auto it = mBatches.begin();
     while (it != mBatches.end()) {
         IndirectValidationBatch& batch = *it;
-        uint64_t min = std::min(newBatch.minOffset, batch.minOffset);
-        uint64_t max = std::max(newBatch.maxOffset, batch.maxOffset);
+        uint64_t min = std::min(newBatch.minByte, batch.minByte);
+        uint64_t max = std::max(newBatch.maxByte, batch.maxByte);
         if (max - min <= maxBatchOffsetRange &&
             batch.draws.size() + newBatch.draws.size() <= maxDrawCallsPerIndirectValidationBatch) {
             // This batch fits within the limits of an existing batch. Merge it.
-            batch.minOffset = min;
-            batch.maxOffset = max;
+            batch.minByte = min;
+            batch.maxByte = max;
             batch.draws.insert(batch.draws.end(), newBatch.draws.begin(), newBatch.draws.end());
             return;
         }
 
-        if (newBatch.minOffset < batch.minOffset) {
+        if (newBatch.minByte < batch.minByte) {
             break;
         }
 
@@ -134,7 +138,7 @@ IndirectMultiDrawMetadata::IndexedIndirectBufferValidationInfo::GetBatches() con
 }
 
 IndirectMultiDrawMetadata::IndirectMultiDrawMetadata(const CombinedLimits& limits)
-    : mMaxBatchOffsetRange(ComputeMaxIndirectValidationBatchOffsetRange(limits)),
+    : mMaxBatchOffsetRange(ComputeMaxIndirectValidationBatchOffsetRangeSize(limits)),
       mMaxDrawCallsPerBatch(ComputeMaxDrawCallsPerIndirectValidationBatch(limits)) {}
 
 IndirectMultiDrawMetadata::~IndirectMultiDrawMetadata() = default;

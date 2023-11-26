@@ -64,6 +64,12 @@ struct BatchInfo {
     uint32_t flags;
 };
 
+// Equivalent to MultiDrawParams struct defined in the shader below
+struct MultiDrawParams {
+    uint32_t indirectStartOffset;
+    uint32_t indirectMaxDraws;
+};
+
 // TODO(https://crbug.com/dawn/1108): Propagate validation feedback from this shader in
 // various failure modes.
 static const char sRenderValidationShaderSource[] = R"(
@@ -152,6 +158,19 @@ static const char sRenderValidationShaderSource[] = R"(
                     return;
                 }
 
+                // TODO: Find more efficient approach
+                // * Do prefix scan on cpu and then binary search?
+                var drawIndex = 0u;
+                var drawSubIndex = id.x;
+
+                for(var i = 0u; i < arrayLength(batch.multiDrawParams); i++){
+                   if(drawSubIndex < batch.multiDrawParams[i].indirectMaxDraws)
+                     break;
+
+                   drawIndex++;
+                   drawSubIndex -= batch.multiDrawParams[i].indirectMaxDraws;
+                }
+
                 if(!bool(batch.flags & kValidationEnabled)) {
                     set_pass(id.x);
                     return;
@@ -227,8 +246,8 @@ ResultOrError<ComputePipelineBase*> GetOrCreateRenderValidationPipeline(DeviceBa
     return store->renderValidationPipeline.Get();
 }
 
-size_t GetBatchDataSize(uint32_t numDraws) {
-    return sizeof(BatchInfo) + numDraws * sizeof(uint32_t);
+size_t GetBatchDataSize(uint32_t numCalls) {
+    return sizeof(BatchInfo) + numCalls * sizeof(MultiDrawParams);
 }
 
 }  // namespace
@@ -237,7 +256,7 @@ uint32_t ComputeMaxDrawCallsPerIndirectValidationBatch(const CombinedLimits& lim
     const uint64_t batchDrawCallLimitByDispatchSize =
         static_cast<uint64_t>(limits.v1.maxComputeWorkgroupsPerDimension) * kWorkgroupSize;
     const uint64_t batchDrawCallLimitByStorageBindingSize =
-        (limits.v1.maxStorageBufferBindingSize - sizeof(BatchInfo)) / sizeof(uint32_t);
+        (limits.v1.maxStorageBufferBindingSize - sizeof(BatchInfo)) / sizeof(MultiDrawParams);
     return static_cast<uint32_t>(
         std::min({batchDrawCallLimitByDispatchSize, batchDrawCallLimitByStorageBindingSize,
                   uint64_t(std::numeric_limits<uint32_t>::max())}));
@@ -296,8 +315,9 @@ MaybeError EncodeIndirectMultiDrawValidationCommands(
 
     for (auto& [config, validationInfo] : bufferInfoMap) {
         const uint64_t indirectDrawCommandSize =
-            config.drawType == IndirectMultiDrawMetadata::DrawType::Indexed ? kDrawIndexedIndirectSize
-                                                                       : kDrawIndirectSize;
+            config.drawType == IndirectMultiDrawMetadata::DrawType::Indexed
+                ? kDrawIndexedIndirectSize
+                : kDrawIndirectSize;
 
         uint64_t outputIndirectSize = indirectDrawCommandSize;
         if (config.duplicateBaseVertexInstance) {
