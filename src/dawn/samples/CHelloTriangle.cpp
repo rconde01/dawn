@@ -161,8 +161,9 @@ void frame() {
 
         WGPURenderPassEncoder pass = wgpuCommandEncoderBeginRenderPass(encoder, &renderpassInfo);
         wgpuRenderPassEncoderSetPipeline(pass, pipeline);
-        wgpuRenderPassEncoderDrawIndirect(pass, indirectBuffer, 0);
-        wgpuRenderPassEncoderDrawIndirect(pass, indirectBuffer, 4 * sizeof(uint32_t));
+        wgpuRenderPassEncoderMultiDrawIndirect(pass, indirectBuffer, 0, 2, nullptr, 0);
+        //wgpuRenderPassEncoderDrawIndirect(pass, indirectBuffer, 0);
+        //wgpuRenderPassEncoderDrawIndirect(pass, indirectBuffer, 4 * sizeof(uint32_t));
         wgpuRenderPassEncoderEnd(pass);
         wgpuRenderPassEncoderRelease(pass);
 
