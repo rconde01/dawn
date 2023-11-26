@@ -353,6 +353,10 @@ void RenderEncoderBase::APIMultiDrawIndirect(BufferBase* indirectBuffer,
             MultiDrawIndirectCmd* cmd =
                 allocator->Allocate<MultiDrawIndirectCmd>(Command::MultiDrawIndirect);
 
+            cmd->maxDrawCount = maxDrawCount;
+            cmd->drawCountOffset = drawCountOffset;
+            cmd->drawCountBuffer = drawCountBuffer;
+
             bool duplicateBaseVertexInstance =
                 GetDevice()->ShouldDuplicateParametersForDrawIndirect(
                     mCommandBufferState.GetRenderPipeline());
@@ -363,6 +367,7 @@ void RenderEncoderBase::APIMultiDrawIndirect(BufferBase* indirectBuffer,
                 // |EncodeIndirectDrawValidationCommands| is called at the end of encoding the
                 // render pass, while the |cmd| pointer is still valid.
                 cmd->indirectBuffer = nullptr;
+                cmd->indirectOffset = 0;
 
                 mIndirectMultiDrawMetadata.AddIndirectMultiDraw(indirectBuffer, indirectOffset,
                                                                 duplicateBaseVertexInstance, cmd);

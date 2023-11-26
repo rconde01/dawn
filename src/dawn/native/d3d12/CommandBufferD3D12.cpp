@@ -1588,10 +1588,11 @@ MaybeError CommandBuffer::RecordRenderPass(CommandRecordingContext* commandConte
                     drawCountBuffer = ToBackend(bufPtr);
                 }
 
-                commandList->ExecuteIndirect(signature.Get(), draw->maxDrawCount,
-                                             buffer->GetD3D12Resource(), draw->indirectOffset,
-                                             drawCountBuffer->GetD3D12Resource(),
-                                             draw->drawCountOffset);
+                commandList->ExecuteIndirect(
+                    signature.Get(), draw->maxDrawCount, buffer->GetD3D12Resource(),
+                    draw->indirectOffset,
+                    drawCountBuffer ? drawCountBuffer->GetD3D12Resource() : nullptr,
+                    draw->drawCountOffset);
                 break;
             }
 

@@ -66,7 +66,7 @@ struct BatchInfo {
 
 // Equivalent to MultiDrawParams struct defined in the shader below
 struct MultiDrawParams {
-    uint32_t indirectStartOffset;
+    uint32_t indirectStartIndex;
     uint32_t indirectMaxDraws;
 };
 
@@ -85,7 +85,7 @@ static const char sRenderValidationShaderSource[] = R"(
             const kValidationEnabled = 4u;
 
             struct MultiDrawParams {
-                indirectStartOffset: u32,
+                indirectStartIndex: u32,
                 indirectMaxDraws: u32,
             };
 
@@ -126,15 +126,18 @@ static const char sRenderValidationShaderSource[] = R"(
             fn fail(drawIndex: u32) {
                 let numParams = numIndirectParamsPerDrawCallOutput();
                 let index = drawIndex * numParams;
+                // Can't we just set instance to zero?
                 for(var i = 0u; i < numParams; i = i + 1u) {
                     outputParams.data[index + i] = 0u;
                 }
             }
 
-            fn set_pass(drawIndex: u32) {
+            fn set_pass(multiDrawIndex: u32, multiDrawSubIndex: u32, indirectDrawIndex: u32) {
                 let numInputParams = numIndirectParamsPerDrawCallInput();
-                var outIndex = drawIndex * numIndirectParamsPerDrawCallOutput();
-                let inIndex = batch.indirectOffsets[drawIndex];
+                var outIndex = indirectDrawIndex * numIndirectParamsPerDrawCallOutput();
+                let inIndex = 
+                  batch.multiDrawParams[multiDrawIndex].indirectStartIndex + 
+                  multiDrawSubIndex*numIndirectParamsPerDrawCallInput();
 
                 // The first 2 parameter is reserved for the duplicated first/baseVertex and firstInstance
 
@@ -160,33 +163,35 @@ static const char sRenderValidationShaderSource[] = R"(
 
                 // TODO: Find more efficient approach
                 // * Do prefix scan on cpu and then binary search?
-                var drawIndex = 0u;
-                var drawSubIndex = id.x;
+                var multiDrawIndex = 0u;
+                var multiDrawSubIndex = id.x;
 
-                for(var i = 0u; i < arrayLength(batch.multiDrawParams); i++){
-                   if(drawSubIndex < batch.multiDrawParams[i].indirectMaxDraws)
-                     break;
+                for(var i = 0u; i < arrayLength(&batch.multiDrawParams); i++){
+                   if(multiDrawSubIndex < batch.multiDrawParams[i].indirectMaxDraws){
+                      break;
+                   }
 
-                   drawIndex++;
-                   drawSubIndex -= batch.multiDrawParams[i].indirectMaxDraws;
+                   multiDrawIndex++;
+                   multiDrawSubIndex -= batch.multiDrawParams[i].indirectMaxDraws;
                 }
 
                 if(!bool(batch.flags & kValidationEnabled)) {
-                    set_pass(id.x);
+                    set_pass(multiDrawIndex, multiDrawSubIndex, id.x);
                     return;
                 }
 
-                let inputIndex = batch.indirectOffsets[id.x];
+                let inputIndex =
+                  batch.multiDrawParams[multiDrawIndex].indirectStartIndex + multiDrawSubIndex;
 
                 if (!bool(batch.flags & kIndexedDraw)) {
-                    set_pass(id.x);
+                    set_pass(multiDrawIndex, multiDrawSubIndex, id.x);
                     return;
                 }
 
                 if (batch.numIndexBufferElementsHigh >= 2u) {
                     // firstIndex and indexCount are both u32. The maximum possible sum of these
                     // values is 0x1fffffffe, which is less than 0x200000000. Nothing to validate.
-                    set_pass(id.x);
+                    set_pass(multiDrawIndex, multiDrawSubIndex, id.x);
                     return;
                 }
 
@@ -205,7 +210,8 @@ static const char sRenderValidationShaderSource[] = R"(
                     fail(id.x);
                     return;
                 }
-                set_pass(id.x);
+
+                set_pass(multiDrawIndex, multiDrawSubIndex, id.x);
             }
         )";
 
@@ -415,7 +421,7 @@ MaybeError EncodeIndirectMultiDrawValidationCommands(
             uint64_t outputParamsOffset = batch.outputParamsOffset;
             for (auto& draw : batch.metadata->draws) {
                 // The shader uses this to index an array of u32, hence the division by 4 bytes.
-                multiDrawParams->indirectStartOffset =
+                multiDrawParams->indirectStartIndex =
                     static_cast<uint32_t>((draw.inputBufferOffset - batch.inputIndirectOffset) / 4);
                 multiDrawParams->indirectMaxDraws = draw.cmd->maxDrawCount;
                 ++multiDrawParams;
