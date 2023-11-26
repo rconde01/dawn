@@ -187,7 +187,8 @@ void RenderPassEncoder::End() {
 
             DAWN_TRY(mEncodingContext->ExitRenderPass(this, std::move(mUsageTracker),
                                                       mCommandEncoder.Get(),
-                                                      std::move(mIndirectDrawMetadata)));
+                                                      std::move(mIndirectDrawMetadata),
+                                                      std::move(mIndirectMultiDrawMetadata));
             return {};
         },
         "encoding %s.End().", this);

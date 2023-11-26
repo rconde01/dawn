@@ -326,19 +326,22 @@ MaybeError EncodeIndirectMultiDrawValidationCommands(
 
         for (const IndirectMultiDrawMetadata::IndirectValidationBatch& batch :
              validationInfo.GetBatches()) {
-            const uint64_t minOffsetFromAlignedBoundary =
-                batch.minOffset % minStorageBufferOffsetAlignment;
-            const uint64_t minOffsetAlignedDown = batch.minOffset - minOffsetFromAlignedBoundary;
+            const uint64_t minByteFromAlignedBoundary =
+                batch.minByte % minStorageBufferOffsetAlignment;
+            const uint64_t minByteAlignedDown = batch.minByte - minByteFromAlignedBoundary;
 
             Batch newBatch;
             newBatch.metadata = &batch;
             newBatch.numIndexBufferElements = config.numIndexBufferElements;
             newBatch.dataSize = GetBatchDataSize(batch.draws.size());
-            newBatch.inputIndirectOffset = minOffsetAlignedDown;
-            newBatch.inputIndirectSize =
-                batch.maxOffset + indirectDrawCommandSize - minOffsetAlignedDown;
+            newBatch.inputIndirectOffset = minByteAlignedDown;
+            newBatch.inputIndirectSize = batch.maxByte + minByteAlignedDown;
+            newBatch.outputParamsSize = 0;
 
-            newBatch.outputParamsSize = batch.draws.size() * outputIndirectSize;
+            for (auto const& b : batch.draws) {
+                newBatch.outputParamsSize += b.cmd->maxDrawCount * outputIndirectSize;
+            }
+
             newBatch.outputParamsOffset = Align(outputParamsSize, minStorageBufferOffsetAlignment);
             outputParamsSize = newBatch.outputParamsOffset + newBatch.outputParamsSize;
             if (outputParamsSize > maxStorageBufferBindingSize) {
@@ -408,12 +411,14 @@ MaybeError EncodeIndirectMultiDrawValidationCommands(
             batch.batchInfo->numDraws = static_cast<uint32_t>(batch.metadata->draws.size());
             batch.batchInfo->flags = pass.flags;
 
-            uint32_t* indirectOffsets = reinterpret_cast<uint32_t*>(batch.batchInfo + 1);
+            auto multiDrawParams = reinterpret_cast<MultiDrawParams*>(batch.batchInfo + 1);
             uint64_t outputParamsOffset = batch.outputParamsOffset;
             for (auto& draw : batch.metadata->draws) {
                 // The shader uses this to index an array of u32, hence the division by 4 bytes.
-                *indirectOffsets++ =
+                multiDrawParams->indirectStartOffset =
                     static_cast<uint32_t>((draw.inputBufferOffset - batch.inputIndirectOffset) / 4);
+                multiDrawParams->indirectMaxDraws = draw.cmd->maxDrawCount;
+                ++multiDrawParams;
 
                 draw.cmd->indirectBuffer = outputParamsBuffer.GetBuffer();
                 draw.cmd->indirectOffset = outputParamsOffset;

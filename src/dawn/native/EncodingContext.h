@@ -37,6 +37,7 @@
 #include "dawn/native/Error.h"
 #include "dawn/native/ErrorData.h"
 #include "dawn/native/IndirectDrawMetadata.h"
+#include "dawn/native/IndirectMultiDrawMetadata.h"
 #include "dawn/native/ObjectType_autogen.h"
 #include "dawn/native/PassResourceUsageTracker.h"
 #include "dawn/native/dawn_platform.h"
@@ -152,7 +153,8 @@ class EncodingContext {
     MaybeError ExitRenderPass(const ApiObjectBase* passEncoder,
                               RenderPassResourceUsageTracker usageTracker,
                               CommandEncoder* commandEncoder,
-                              IndirectDrawMetadata indirectDrawMetadata);
+                              IndirectDrawMetadata indirectDrawMetadata,
+                              IndirectMultiDrawMetadata indirectMultiDrawMetadata);
     void ExitComputePass(const ApiObjectBase* passEncoder, ComputePassResourceUsage usages);
     MaybeError Finish();
 

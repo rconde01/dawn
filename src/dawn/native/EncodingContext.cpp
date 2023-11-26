@@ -33,6 +33,7 @@
 #include "dawn/native/Device.h"
 #include "dawn/native/ErrorData.h"
 #include "dawn/native/IndirectDrawValidationEncoder.h"
+#include "dawn/native/IndirectMultiDrawValidationEncoder.h"
 #include "dawn/native/RenderBundleEncoder.h"
 
 namespace dawn::native {
@@ -131,7 +132,8 @@ void EncodingContext::EnterPass(const ApiObjectBase* passEncoder) {
 MaybeError EncodingContext::ExitRenderPass(const ApiObjectBase* passEncoder,
                                            RenderPassResourceUsageTracker usageTracker,
                                            CommandEncoder* commandEncoder,
-                                           IndirectDrawMetadata indirectDrawMetadata) {
+                                           IndirectDrawMetadata indirectDrawMetadata,
+                                           IndirectMultiDrawMetadata indirectMultiDrawMetadata) {
     DAWN_ASSERT(mCurrentEncoder != mTopLevelEncoder);
     DAWN_ASSERT(mCurrentEncoder == passEncoder);
 
@@ -157,6 +159,11 @@ MaybeError EncodingContext::ExitRenderPass(const ApiObjectBase* passEncoder,
             DAWN_TRY_WITH_CLEANUP(
                 EncodeIndirectDrawValidationCommands(mDevice, commandEncoder, &usageTracker,
                                                      &indirectDrawMetadata),
+                { mPendingCommands = std::move(renderCommands); });
+
+            DAWN_TRY_WITH_CLEANUP(
+                EncodeIndirectMultiDrawValidationCommands(mDevice, commandEncoder, &usageTracker,
+                                                          &indirectMultiDrawMetadata),
                 { mPendingCommands = std::move(renderCommands); });
         }
 
