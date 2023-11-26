@@ -106,6 +106,7 @@ enum class DeviceExt {
     DriverProperties,
     ImageFormatList,
     ShaderFloat16Int8,
+    DrawIndirectCount,
 
     // Promoted to 1.3
     ShaderIntegerDotProduct,

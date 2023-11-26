@@ -167,6 +167,7 @@ static constexpr std::array<DeviceExtInfo, kDeviceExtCount> sDeviceExtInfos{{
     {DeviceExt::DriverProperties, "VK_KHR_driver_properties", VulkanVersion_1_2},
     {DeviceExt::ImageFormatList, "VK_KHR_image_format_list", VulkanVersion_1_2},
     {DeviceExt::ShaderFloat16Int8, "VK_KHR_shader_float16_int8", VulkanVersion_1_2},
+    {DeviceExt::DrawIndirectCount, "VK_KHR_draw_indirect_count", VulkanVersion_1_2},
 
     {DeviceExt::ShaderIntegerDotProduct, "VK_KHR_shader_integer_dot_product", VulkanVersion_1_3},
     {DeviceExt::ZeroInitializeWorkgroupMemory, "VK_KHR_zero_initialize_workgroup_memory",

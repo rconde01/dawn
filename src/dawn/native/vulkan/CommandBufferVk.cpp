@@ -1158,6 +1158,25 @@ MaybeError CommandBuffer::RecordRenderPass(CommandRecordingContext* recordingCon
                 break;
             }
 
+            case Command::MultiDrawIndirect: {
+                MultiDrawIndirectCmd* draw = iter->NextCommand<MultiDrawIndirectCmd>();
+                Buffer* buffer = ToBackend(draw->indirectBuffer.Get());
+
+                descriptorSets.Apply(device, recordingContext, VK_PIPELINE_BIND_POINT_GRAPHICS);
+
+                if (draw->drawCountBuffer == nullptr) {
+                    device->fn.CmdDrawIndirect(commands, buffer->GetHandle(),
+                                               static_cast<VkDeviceSize>(draw->indirectOffset),
+                                               draw->maxDrawCount, 0);
+                } else {
+                    Buffer* countBuffer = ToBackend(draw->drawCountBuffer.Get());
+                    device->fn.CmdDrawIndirectCount(
+                        commands, buffer->GetHandle(),
+                        static_cast<VkDeviceSize>(draw->indirectOffset), countBuffer->GetHandle(),
+                        static_cast<VkDeviceSize>(draw->drawCountOffset), draw->maxDrawCount, 0);
+                }
+            }
+
             case Command::DrawIndexedIndirect: {
                 DrawIndexedIndirectCmd* draw = iter->NextCommand<DrawIndexedIndirectCmd>();
                 Buffer* buffer = ToBackend(draw->indirectBuffer.Get());

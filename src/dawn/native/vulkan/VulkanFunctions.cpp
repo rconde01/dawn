@@ -363,6 +363,12 @@ MaybeError VulkanFunctions::LoadDeviceProcs(VkDevice device, const VulkanDeviceI
     GET_DEVICE_PROC(UpdateDescriptorSets);
     GET_DEVICE_PROC(WaitForFences);
 
+    // TODO(RWC) - Should auto-get if Vulkan 1.2+...but we don't have the API
+    // version available here.
+    if (deviceInfo.HasExt(DeviceExt::DrawIndirectCount)) {
+        GET_DEVICE_PROC(CmdDrawIndirectCount);
+    }
+
     if (deviceInfo.HasExt(DeviceExt::ExternalMemoryFD)) {
         GET_DEVICE_PROC(GetMemoryFdKHR);
         GET_DEVICE_PROC(GetMemoryFdPropertiesKHR);
