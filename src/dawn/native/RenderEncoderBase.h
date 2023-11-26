@@ -32,6 +32,7 @@
 #include "dawn/native/CommandBufferStateTracker.h"
 #include "dawn/native/Error.h"
 #include "dawn/native/IndirectDrawMetadata.h"
+#include "dawn/native/IndirectMultiDrawMetadata.h"
 #include "dawn/native/PassResourceUsageTracker.h"
 #include "dawn/native/ProgrammableEncoder.h"
 
@@ -59,8 +60,13 @@ class RenderEncoderBase : public ProgrammableEncoder {
     void APIDrawIndirect(BufferBase* indirectBuffer, uint64_t indirectOffset);
     void APIDrawIndexedIndirect(BufferBase* indirectBuffer, uint64_t indirectOffset);
 
-    void APIMultiDrawIndirect(BufferBase* indirectBuffer, uint64_t indirectOffset, uint32_t maxDrawCount, BufferBase * drawCountBuffer, uint64_t drawCountOffset);
-    //void APIMultiDrawIndexedIndirect(BufferBase* indirectBuffer, uint64_t indirectOffset, uint32_t maxDrawCount, BufferBase * drawCountBuffer, uint64_t drawCountOffset);
+    void APIMultiDrawIndirect(BufferBase* indirectBuffer,
+                              uint64_t indirectOffset,
+                              uint32_t maxDrawCount,
+                              BufferBase* drawCountBuffer,
+                              uint64_t drawCountOffset);
+    // void APIMultiDrawIndexedIndirect(BufferBase* indirectBuffer, uint64_t indirectOffset,
+    // uint32_t maxDrawCount, BufferBase * drawCountBuffer, uint64_t drawCountOffset);
 
     void APISetPipeline(RenderPipelineBase* pipeline);
 
@@ -93,6 +99,7 @@ class RenderEncoderBase : public ProgrammableEncoder {
     CommandBufferStateTracker mCommandBufferState;
     RenderPassResourceUsageTracker mUsageTracker;
     IndirectDrawMetadata mIndirectDrawMetadata;
+    IndirectMultiDrawMetadata mIndirectMultiDrawMetadata;
 
     uint64_t mDrawCount = 0;
 
