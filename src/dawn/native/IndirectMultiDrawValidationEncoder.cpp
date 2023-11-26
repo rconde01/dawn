@@ -341,7 +341,7 @@ MaybeError EncodeIndirectMultiDrawValidationCommands(
             newBatch.numIndexBufferElements = config.numIndexBufferElements;
             newBatch.dataSize = GetBatchDataSize(batch.draws.size());
             newBatch.inputIndirectOffset = minByteAlignedDown;
-            newBatch.inputIndirectSize = batch.maxByte + minByteAlignedDown;
+            newBatch.inputIndirectSize = batch.maxByte + minByteAlignedDown + 1;
             newBatch.outputParamsSize = 0;
 
             for (auto const& b : batch.draws) {
@@ -414,7 +414,7 @@ MaybeError EncodeIndirectMultiDrawValidationCommands(
         for (Batch& batch : pass.batches) {
             batch.batchInfo = new (&batchData[batch.dataBufferOffset]) BatchInfo();
             batch.batchInfo->numIndexBufferElements = batch.numIndexBufferElements;
-            batch.batchInfo->numDraws = static_cast<uint32_t>(batch.metadata->draws.size());
+            batch.batchInfo->numDraws = 0;
             batch.batchInfo->flags = pass.flags;
 
             auto multiDrawParams = reinterpret_cast<MultiDrawParams*>(batch.batchInfo + 1);
@@ -424,6 +424,7 @@ MaybeError EncodeIndirectMultiDrawValidationCommands(
                 multiDrawParams->indirectStartIndex =
                     static_cast<uint32_t>((draw.inputBufferOffset - batch.inputIndirectOffset) / 4);
                 multiDrawParams->indirectMaxDraws = draw.cmd->maxDrawCount;
+                batch.batchInfo->numDraws += draw.cmd->maxDrawCount;
                 ++multiDrawParams;
 
                 draw.cmd->indirectBuffer = outputParamsBuffer.GetBuffer();
