@@ -41,7 +41,7 @@ class RenderPassResourceUsageTracker;
 // The maximum number of draws call we can fit into a single validation batch. This is
 // essentially limited by the number of indirect parameter blocks that can fit into the maximum
 // allowed storage binding size (with the base limits, it is about 6.7M).
-uint32_t ComputeMaxDrawCallsPerIndirectValidationBatch(const CombinedLimits& limits);
+uint32_t ComputeMaxMultiDrawCallsPerIndirectValidationBatch(const CombinedLimits& limits);
 
 MaybeError EncodeIndirectMultiDrawValidationCommands(
     DeviceBase* device,

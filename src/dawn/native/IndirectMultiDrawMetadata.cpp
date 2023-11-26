@@ -31,7 +31,7 @@
 #include <utility>
 
 #include "dawn/common/Constants.h"
-#include "dawn/native/IndirectDrawValidationEncoder.h"
+#include "dawn/native/IndirectMultiDrawValidationEncoder.h"
 #include "dawn/native/Limits.h"
 #include "dawn/native/RenderBundle.h"
 
@@ -139,7 +139,7 @@ IndirectMultiDrawMetadata::IndexedIndirectBufferValidationInfo::GetBatches() con
 
 IndirectMultiDrawMetadata::IndirectMultiDrawMetadata(const CombinedLimits& limits)
     : mMaxBatchOffsetRange(ComputeMaxIndirectValidationBatchOffsetRangeSize(limits)),
-      mMaxDrawCallsPerBatch(ComputeMaxDrawCallsPerIndirectValidationBatch(limits)) {}
+      mMaxDrawCallsPerBatch(ComputeMaxMultiDrawCallsPerIndirectValidationBatch(limits)) {}
 
 IndirectMultiDrawMetadata::~IndirectMultiDrawMetadata() = default;
 

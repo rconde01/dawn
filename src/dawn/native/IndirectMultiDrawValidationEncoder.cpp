@@ -252,7 +252,7 @@ size_t GetBatchDataSize(uint32_t numCalls) {
 
 }  // namespace
 
-uint32_t ComputeMaxDrawCallsPerIndirectValidationBatch(const CombinedLimits& limits) {
+uint32_t ComputeMaxMultiDrawCallsPerIndirectValidationBatch(const CombinedLimits& limits) {
     const uint64_t batchDrawCallLimitByDispatchSize =
         static_cast<uint64_t>(limits.v1.maxComputeWorkgroupsPerDimension) * kWorkgroupSize;
     const uint64_t batchDrawCallLimitByStorageBindingSize =
