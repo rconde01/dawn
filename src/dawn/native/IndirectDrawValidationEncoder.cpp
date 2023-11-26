@@ -326,6 +326,7 @@ MaybeError EncodeIndirectDrawValidationCommands(DeviceBase* device,
             newBatch.outputParamsOffset = Align(outputParamsSize, minStorageBufferOffsetAlignment);
             outputParamsSize = newBatch.outputParamsOffset + newBatch.outputParamsSize;
             if (outputParamsSize > maxStorageBufferBindingSize) {
+               // TODO(RWC) Message is wrong if validation is disabled
                 return DAWN_INTERNAL_ERROR("Too many drawIndexedIndirect calls to validate");
             }
 
@@ -455,6 +456,7 @@ MaybeError EncodeIndirectDrawValidationCommands(DeviceBase* device,
         inputIndirectBinding.buffer = pass.inputIndirectBuffer;
 
         for (const Batch& batch : pass.batches) {
+            // Update bind groups
             bufferDataBinding.offset = batch.dataBufferOffset;
             bufferDataBinding.size = batch.dataSize;
             inputIndirectBinding.offset = batch.inputIndirectOffset;
